@@ -2,9 +2,9 @@
 
 A Prática 2 do exercício `Ex_A3_EntendendoMocks_EstudoCaso_.docx` amplia a Gestão de Jogos: os jogos da semana anterior devem ser salvos como finalizados, identificando os vencedores, antes de qualquer envio de SMS.
 
-A suíte foi simplificada para **quatro testes da Prática 2**, preservando os sete testes originais de jogo, julgamento, identificação do vencedor e contexto Spring. A implementação de negócio e a persistência transacional permanecem iguais.
+A suíte mantém **quatro testes principais da Prática 2**, os sete testes originais e 26 testes complementares para cobrir os demais caminhos da aplicação. A implementação de negócio e a persistência transacional permanecem iguais.
 
-**Validação em 28/10/2026:** `clean install` aprovado, 11 testes executados, sem falhas, erros ou testes ignorados. A cobertura atual de linhas é **77,26%**. A suíte reduzida não atende ao requisito original de 100% de cobertura do enunciado.
+**Validação em 28/10/2026:** `clean install` aprovado, 37 testes executados, sem falhas, erros ou testes ignorados. O JaCoCo confirmou **100% das instruções, branches e linhas**, sem exclusões de classes. Essa exigência é obrigatória no build padrão.
 
 ## Regra de negócio
 
@@ -15,7 +15,7 @@ A suíte foi simplificada para **quatro testes da Prática 2**, preservando os s
 
 O contador de finalizações representa a última execução e só é atualizado após a confirmação do lote. Os testes usam um relógio fixo em 28/10/2026 no fuso `America/Sao_Paulo`; os jogos elegíveis estão entre 19/10 e 25/10, inclusive. Em execução normal, o relógio utiliza o fuso do sistema operacional.
 
-## Os quatro testes da Prática 2
+## Os quatro testes principais da Prática 2
 
 | Classe | Teste | O que demonstra |
 | --- | --- | --- |
@@ -24,9 +24,25 @@ O contador de finalizações representa a última execução e só é atualizado
 | [JogoDaoTest](src/test/java/br/com/valueprojects/mock_spring/test/JogoDaoTest.java) | `deveConfirmarTodosOsVencedoresNoBancoAntesDoSms` | Outra conexão H2 encontra os dois jogos e vencedores confirmados durante a chamada do SMS mockado. |
 | [JogoDaoTest](src/test/java/br/com/valueprojects/mock_spring/test/JogoDaoTest.java) | `deveDesfazerLoteENaoEnviarSmsSeSegundoJogoFalhar` | Um erro SQL real no segundo update provoca rollback do lote e nenhum SMS. |
 
-Os dois primeiros são testes unitários com mocks do repositório e do serviço de SMS. Os outros dois combinam persistência H2 real e mock de SMS. Os casos adicionais usados para atingir 100% foram retirados, sem agrupar cenários independentes artificialmente em um único teste.
+Os dois primeiros são testes unitários com mocks do repositório e do serviço de SMS. Os outros dois combinam persistência H2 real e mock de SMS. Eles continuam concentrados em duas classes para facilitar a apresentação da regra principal.
 
 Os testes anteriores em `JogoTest`, `JuizTest`, `JulgamentoTest` e `TesteUnidade2ApplicationTests` permanecem. O helper [CenariosPratica2](src/test/java/br/com/valueprojects/mock_spring/CenariosPratica2.java) concentra o relógio, os participantes e a criação de bancos isolados.
+
+## Testes complementares para cobertura integral
+
+Os demais cenários ficam separados dos quatro testes principais, sem duplicar esses mesmos testes:
+
+| Classe | Quantidade | Comportamentos verificados |
+| --- | --- | --- |
+| [FinalizaJogoComplementarTest](src/test/java/br/com/valueprojects/mock_spring/FinalizaJogoComplementarTest.java) | 8 | Falha de consulta, lista vazia, datas fora da semana, limites da semana, ausência de resultados, falha de SMS, contador por execução e relógio padrão. |
+| [JogoDaoComplementarTest](src/test/java/br/com/valueprojects/mock_spring/test/JogoDaoComplementarTest.java) | 7 | Dados recarregados, falha de commit, vencedor inválido, finalização duplicada, jogo sem resultados, erro ao cadastrar resultados, conexão indisponível e ausência de chave gerada. |
+| [JuizComplementarTest](src/test/java/br/com/valueprojects/mock_spring/test/JuizComplementarTest.java) | 4 | Reutilização do juiz, empate, pontuações negativas e jogo sem resultados. |
+| [DominioPratica2Test](src/test/java/br/com/valueprojects/mock_spring/test/DominioPratica2Test.java) | 3 | Limite de resultados, dados de jogo/participante/pagamento, builder e igualdade de participantes. |
+| [JogoDaoFalsoTest](src/test/java/br/com/valueprojects/mock_spring/test/JogoDaoFalsoTest.java) | 2 | Isolamento entre instâncias e validação do lote antes de modificar os jogos. |
+| [JogoControllerTest](src/test/java/br/com/valueprojects/mock_spring/test/JogoControllerTest.java) | 1 | Cadastro, listagem e julgamento do controller existente. |
+| [AplicacaoPratica2Test](src/test/java/br/com/valueprojects/mock_spring/AplicacaoPratica2Test.java) | 1 | Inicialização pelo `main`, configuração, banco real H2 e demonstração de SMS simulado. |
+
+Essa separação mantém a leitura dos quatro cenários centrais simples e permite cumprir o requisito de cobertura de toda a aplicação.
 
 ## Como os mocks são utilizados
 
@@ -83,7 +99,7 @@ Com JDK 21 configurado em `JAVA_HOME`, na raiz de `mock_spring`:
 .\mvnw.cmd clean install
 ```
 
-Para executar somente os quatro testes da Prática 2:
+Para executar somente os quatro testes principais da Prática 2:
 
 ```powershell
 .\mvnw.cmd "-Dtest=FinalizaJogoTest,JogoDaoTest" test
@@ -92,23 +108,24 @@ Para executar somente os quatro testes da Prática 2:
 Resultado da suíte completa em 28/10/2026, com Java 21.0.12:
 
 ```text
-Tests run: 11, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 37, Failures: 0, Errors: 0, Skipped: 0
+All coverage checks have been met.
 BUILD SUCCESS
 ```
 
 | Métrica JaCoCo | Coberto | Perdido | Cobertura |
 | --- | --- | --- | --- |
-| Instruções | 828 | 312 | 72,63% |
-| Branches | 50 | 20 | 71,43% |
-| Linhas | 214 | 63 | 77,26% |
+| Instruções | 1.140 | 0 | 100% |
+| Branches | 70 | 0 | 100% |
+| Linhas | 277 | 0 | 100% |
 
-O relatório considera todas as classes, sem exclusões. O build padrão gera a cobertura na fase `verify`, sem impor 100%. A antiga exigência foi preservada no perfil opcional `cobertura-completa` do [POM](pom.xml):
+O relatório considera as 14 classes analisadas pelo JaCoCo, sem exclusões configuradas. O [POM](pom.xml) executa `report` e `check` na fase `verify`, com limite de zero instruções, branches e linhas perdidas. A verificação é obrigatória, sem ativação de perfil:
 
 ```powershell
-.\mvnw.cmd -Pcobertura-completa clean verify
+.\mvnw.cmd clean verify
 ```
 
-Esse perfil reprova a suíte reduzida enquanto a cobertura estiver abaixo de 100%. Para cumprir integralmente esse critério do enunciado, será necessário voltar a ampliar os testes. O sucesso dos quatro cenários essenciais não comprova cobertura integral da aplicação.
+`clean verify` e `clean install` falham se os testes falharem ou a cobertura ficar abaixo de 100% nessas três métricas. Executar apenas `test` não executa a verificação de cobertura da fase `verify`.
 
 Artefatos locais:
 
@@ -139,4 +156,4 @@ O enunciado solicita programação em pares. Preencher conforme o trabalho reali
 - Integrante 2 e RA: preencher.
 - Participação e revisão da dupla: preencher.
 
-Para a entrega, apresentar os quatro cenários, o resultado da suíte e a cobertura real, sem reutilizar a afirmação de 100% referente à suíte anterior.
+Para a entrega, apresentar os quatro cenários principais, identificar os testes complementares e anexar o resultado atual dos 37 testes e do JaCoCo com 100% de cobertura.
